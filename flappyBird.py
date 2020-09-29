@@ -2,7 +2,8 @@ import pygame
 import random
 import time
 import os
-
+import neat
+pygame.font.init()
 WIN_WIDTH  = 512
 WIN_HEIGHT = 800
 
@@ -10,6 +11,9 @@ bird_imgs   = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","b
 pipe_img    = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","pipe.png")))
 bg_img      = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","bg.png")))
 base_img    = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","base.png")))
+
+font        = pygame.font.SysFont('comicsans', 50)
+
 
 
 class Bird:
@@ -150,25 +154,78 @@ class Base:
         win.blit(self.IMG,   (self.x1, self.y))
         win.blit(self.IMG, (self.x2, self.y))
 
-def draw_window(win, bird):
+def draw_window(win, Bird,pipes, base, score):
     win.blit(bg_img, (0,0))
-    bird.draw(win)
+
+
+    for pipe in pipes:
+        pipe.draw(win)
+
+    text = font.render("SCORE: + "+ str(score),1,(255,255,255))
+    win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 10))
+    base.draw(win)
+
+    Bird.draw(win)
     pygame.display.update()
 
-def main():
-    bird = Bird(200,200)
-    win  = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+def main(genomes, config):
+    bird  = Bird(230,350)
+    base  = Base(730)
+    pipes = [Pipe(700)]
+    win   = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
     clock = pygame.time.Clock()
-    run  = True
+    run   = True
+    score = 0
     while run:
         clock.tick(30)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
 
-        bird.move()
-        draw_window(win, bird)
+        #bird.move()
+        addedPipe    = False
+        removedPipes = []
+        for pipe in pipes:
+            if pipe.colide(bird):
+                pass
+            if pipe.x + pipe.pipeTop.get_width() < 0:
+                removedPipes.append(pipe)
+            if not pipe.passed and pipe.x < bird.x:
+                pipe.passed = True
+                addedPipe   = True
+
+            pipe.move()
+
+        if addedPipe:
+            score += 1
+            pipes.append(Pipe(700))
+
+        for x in removedPipes:
+            pipes.remove(x)
+        
+        if bird.y + bird.img.get_height() >= 730:
+            pass
+
+
+            
+
+        base.move()
+        draw_window(win, bird, pipes, base, score)
     pygame.quit()
     quit()
 main()
+
+def run(configPath):
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, configPath)
+
+    p = neat.Population(config) 
+    p.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    p.add_reporter(stats)
+
+    winner = p.run(main,50)
     
+if __name__ == "main":
+    localDir   = os.path.dirname(__file__)
+    configPath = os.path.join(localDir, 'config-feedforward.txt')
+    run(configPath) 
