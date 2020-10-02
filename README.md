@@ -1,2 +1,3 @@
 # Flappy-bird-with-AI
-Firstly Im learning how to create game with pygame and then we gonna AI him 
+AI flappy bird 
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/WinterOdin/Flappy-bird-with-AI)
